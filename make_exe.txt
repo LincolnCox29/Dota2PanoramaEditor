@@ -1,1 +1,0 @@
-pyinstaller --onefile --icon=D:\Projects\Dota2PanoramaEditor\icon.ico --name "Dota2PanoramaEditor" D:\Projects\Dota2PanoramaEditor\Dota2PanoramaEditor.py 

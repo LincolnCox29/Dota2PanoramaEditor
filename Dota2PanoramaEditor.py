@@ -62,18 +62,19 @@ def main():
         path_to_dota = os.path.join(path_to_steam, "steamapps", "common", "dota 2 beta")
         dota_russian_path = os.path.join(path_to_dota, "game", "dota_russian")
         
-        # Backup current VPK file
+        # Replacement `pak01_dir.vpk` with `pak01_000.vpk`
         os.chdir(dota_russian_path)
         if os.path.exists("pak01_000.vpk"):
-            os.remove("pak01_000.vpk")  # Remove old backup
+            os.remove("pak01_000.vpk")
         if os.path.exists("pak01_dir.vpk"):
-            os.rename("pak01_dir.vpk", "pak01_000.vpk")  # Create new backup
+            os.rename("pak01_dir.vpk", "pak01_000.vpk")  
 
         # ========== VPK CREATION ==========
         script_dir = os.path.dirname(os.path.abspath(__file__))
         vpk_creator_dir = os.path.join(script_dir, "vpk_creator")
         
-        # Prepare target directory structure
+        # Moving the target webm file to the vpk creator directory
+        # Rename target webm to `123`
         target_webm_dir = os.path.join(vpk_creator_dir, "pak01_dir", "123")
         os.makedirs(target_webm_dir, exist_ok=True)
         shutil.copy2(path_to_webm, target_webm_dir)
