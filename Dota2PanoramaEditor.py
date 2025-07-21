@@ -3,6 +3,64 @@ import shutil
 import subprocess
 import sys
 
+def get_script_dir():
+    return os.path.dirname(os.path.abspath(__file__))
+
+def get_valid_input(prompt, validation_func):
+    #Get and validate user input with retrya
+    while True:
+        try:
+            value = input(prompt).strip()
+            if validation_func(value):
+                return value
+            print("Invalid path, please try again")
+        except Exception as e:
+            print(f"Error: {e}")
+
+def find_steam_path():
+    steam_dir_file = os.path.join(get_script_dir(), "steam_dir")
+    def save_steam_path(path):
+        with open(steam_dir_file, 'w', encoding='utf-8') as file:
+            file.write(path)
+        
+    # Check if there is a saved Steam path
+    if (os.path.getsize(steam_dir_file) != 0):
+        with open(steam_dir_file, 'r', encoding='utf-8') as file:
+            return file.readlines()[0]
+
+    print("Searching Steam directories...")
+    print("This might take several minutes, please wait")
+    # Search standard directories
+    possible_paths = [
+        os.path.expandvars("%ProgramFiles(x86)%\\Steam"),
+        os.path.expandvars("%ProgramFiles%\\Steam"),
+        os.path.expandvars("%LOCALAPPDATA%\\Steam"),
+    ]
+    
+    for path in possible_paths:
+        if os.path.exists(path) and os.path.exists(os.path.join(path, "steamapps")):
+            save_steam_path(path)
+            return path
+    
+    # If not found in standard locations, search all drives
+    drives = [f"{d}:\\" for d in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' if os.path.exists(f"{d}:\\")]
+    
+    for drive in drives:
+        for root, dirs, files in os.walk(drive):
+            if "Steam" in dirs:
+                steam_path = os.path.join(root, "Steam")
+                if os.path.exists(os.path.join(steam_path, "steamapps")):
+                    save_steam_path(steam_path)
+                    return steam_path
+
+    # If not found any way - enter manually
+    path = get_valid_input(
+        "2. Enter full path to Steam folder: ",
+        lambda x: os.path.exists(os.path.join(x, "steamapps", "common", "dota 2 beta"))
+    )
+    save_steam_path(path)
+    return path
+
 def check_dependencies():
     #Verify all required files exist in the vpk_creator directory
     required_files = {
@@ -10,7 +68,7 @@ def check_dependencies():
         'Create vpk-archive from pak01_dir folder.bat': "Batch file not found"
     }
     
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    script_dir = get_script_dir()
     vpk_creator_dir = os.path.join(script_dir, "vpk_creator")
     
     missing_files = []
@@ -26,17 +84,6 @@ def check_dependencies():
         return False
     return True
 
-def get_valid_input(prompt, validation_func):
-    #Get and validate user input with retrya
-    while True:
-        try:
-            value = input(prompt).strip()
-            if validation_func(value):
-                return value
-            print("Invalid path, please try again")
-        except Exception as e:
-            print(f"Error: {e}")
-
 def main():
     # Verify all required files exist
     if not check_dependencies():
@@ -51,10 +98,7 @@ def main():
         lambda x: os.path.exists(x)
     )
     
-    path_to_steam = get_valid_input(
-        "2. Enter full path to Steam folder: ",
-        lambda x: os.path.exists(os.path.join(x, "steamapps", "common", "dota 2 beta"))
-    )
+    path_to_steam = find_steam_path()
     
     try:
         # ========== DOTA 2 FILE OPERATIONS ==========
@@ -70,7 +114,7 @@ def main():
             os.rename("pak01_dir.vpk", "pak01_000.vpk")  
 
         # ========== VPK CREATION ==========
-        script_dir = os.path.dirname(os.path.abspath(__file__))
+        script_dir = get_script_dir()
         vpk_creator_dir = os.path.join(script_dir, "vpk_creator")
         
         # Moving the target webm file to the vpk creator directory
