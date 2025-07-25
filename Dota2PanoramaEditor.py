@@ -6,6 +6,10 @@ import sys
 def get_script_dir():
     return os.path.dirname(os.path.abspath(__file__))
 
+def cleanup():
+    panorama_path = os.path.join(get_script_dir(), "vpk_creator", "pak01_dir", "123")
+    shutil.rmtree(panorama_path, ignore_errors=True)
+
 def get_valid_input(prompt, validation_func):
     #Get and validate user input with retrya
     while True:
@@ -143,15 +147,19 @@ def main():
         if os.path.exists(created_vpk):
             shutil.copy(created_vpk, dota_russian_path)
             print("\nSuccess! VPK file has been updated.")
+            cleanup()
         else:
             print("\nError: VPK file was not created")
+            cleanup()
             sys.exit(1)
             
     except subprocess.CalledProcessError:
         print("\nError: VPK creation failed")
+        cleanup()
         sys.exit(1)
     except Exception as e:
         print(f"\nCritical error: {e}")
+        cleanup()
         sys.exit(1)
 
 if __name__ == "__main__":
