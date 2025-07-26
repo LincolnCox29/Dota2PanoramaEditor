@@ -2,6 +2,14 @@ import os
 import shutil
 import subprocess
 import sys
+import ctypes
+
+def admin_check():
+    if not ctypes.windll.shell32.IsUserAnAdmin():
+        print("Restarts as administrator...")
+        ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", sys.executable, f'"{__file__}"', None, 1)
+        sys.exit()
 
 def get_script_dir():
     return os.path.dirname(os.path.abspath(__file__))
@@ -89,6 +97,9 @@ def check_dependencies():
     return True
 
 def main():
+    # Restarts as administrator
+    admin_check()
+
     # Verify all required files exist
     if not check_dependencies():
         sys.exit(1)
