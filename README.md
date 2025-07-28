@@ -59,9 +59,9 @@
 ## **📁 Структура папок**  
 ```
 Dota2PanoramaEditor/  
-├── Dota2PanoramaEditor.py  # Главный скрипт  
+├── Dota2PanoramaEditor.py  # Главный скрипт
+├── steam_dir               # Файл хронящий путь до Steam
 └── vpk_creator/  
     ├── vpk.exe             # Инструмент для работы с VPK
-    ├── steam_dir           # Файл хронящий путь до Steam
     └── Create vpk-archive from pak01_dir folder.bat  # Батник для упаковки  
 ```
