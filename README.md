@@ -1,6 +1,10 @@
 # **Dota 2 Panorama Editor - VPK Creator**  
 **Простой инструмент для замены панорамы в Dota 2**  
 
+[![GitHub release](https://img.shields.io/github/v/release/LincolnCox29/Dota2PanoramaEditor?include_prereleases&style=flat-square)](https://github.com/LincolnCox29/Dota2PanoramaEditor/releases)
+[![Downloads](https://img.shields.io/github/downloads/LincolnCox29/Dota2PanoramaEditor/total?style=flat-square)](https://github.com/LincolnCox29/Dota2PanoramaEditor/releases)
+[![Stars](https://img.shields.io/github/stars/LincolnCox29/Dota2PanoramaEditor?style=flat-square)](https://github.com/LincolnCox29/Dota2PanoramaEditor/stargazers)
+
 Этот скрипт автоматизирует процесс замены видеофайлов в Dota 2, упаковывая их в VPK-архив и помещая в нужную папку игры.  
 
 ---
