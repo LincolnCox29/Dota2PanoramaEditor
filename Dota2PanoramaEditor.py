@@ -1,81 +1,16 @@
+#main
 import os
 import shutil
 import subprocess
-import sys
-import ctypes
+import utils
 
 def fix_patch_7_39_d(vpk_creator_dir, dota_russian_path):
     fix_path = os.path.join(vpk_creator_dir, "pak02_dir.vpk")
     shutil.copy(fix_path, dota_russian_path)
 
-def admin_check():
-    if not ctypes.windll.shell32.IsUserAnAdmin():
-        print("Restarts as administrator...")
-        ctypes.windll.shell32.ShellExecuteW(
-            None, "runas", sys.executable, f'"{__file__}"', None, 1)
-        sys.exit()
-
-def get_script_dir():
-    return os.path.dirname(os.path.abspath(__file__))
-
 def cleanup():
-    panorama_path = os.path.join(get_script_dir(), "vpk_creator", "pak01_dir", "123")
+    panorama_path = os.path.join(utils.get_script_dir(), "vpk_creator", "pak01_dir", "123")
     shutil.rmtree(panorama_path, ignore_errors=True)
-
-def get_valid_input(prompt, validation_func):
-    #Get and validate user input with retrya
-    while True:
-        try:
-            value = input(prompt).strip()
-            if validation_func(value):
-                return value
-            print("Invalid path, please try again")
-        except Exception as e:
-            print(f"Error: {e}")
-
-def find_steam_path():
-    steam_dir_file = os.path.join(get_script_dir(), "steam_dir")
-    def save_steam_path(path):
-        with open(steam_dir_file, 'w', encoding='utf-8') as file:
-            file.write(path)
-        
-    # Check if there is a saved Steam path
-    if (os.path.getsize(steam_dir_file) != 0):
-        with open(steam_dir_file, 'r', encoding='utf-8') as file:
-            return file.readlines()[0]
-
-    print("Searching Steam directories...")
-    print("This might take several minutes, please wait")
-    # Search standard directories
-    possible_paths = [
-        os.path.expandvars("%ProgramFiles(x86)%\\Steam"),
-        os.path.expandvars("%ProgramFiles%\\Steam"),
-        os.path.expandvars("%LOCALAPPDATA%\\Steam"),
-    ]
-    
-    for path in possible_paths:
-        if os.path.exists(path) and os.path.exists(os.path.join(path, "steamapps")):
-            save_steam_path(path)
-            return path
-    
-    # If not found in standard locations, search all drives
-    drives = [f"{d}:\\" for d in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' if os.path.exists(f"{d}:\\")]
-    
-    for drive in drives:
-        for root, dirs, files in os.walk(drive):
-            if "Steam" in dirs:
-                steam_path = os.path.join(root, "Steam")
-                if os.path.exists(os.path.join(steam_path, "steamapps")):
-                    save_steam_path(steam_path)
-                    return steam_path
-
-    # If not found any way - enter manually
-    path = get_valid_input(
-        "2. Enter full path to Steam folder: ",
-        lambda x: os.path.exists(os.path.join(x, "steamapps", "common", "dota 2 beta"))
-    )
-    save_steam_path(path)
-    return path
 
 def check_dependencies():
     #Verify all required files exist in the vpk_creator directory
@@ -84,7 +19,7 @@ def check_dependencies():
         'Create vpk-archive from pak01_dir folder.bat': "Batch file not found"
     }
     
-    script_dir = get_script_dir()
+    script_dir = utils.get_script_dir()
     vpk_creator_dir = os.path.join(script_dir, "vpk_creator")
     
     missing_files = []
@@ -102,29 +37,28 @@ def check_dependencies():
 
 def main():
     # Restarts as administrator
-    admin_check()
+    utils.admin_check()
 
     # Verify all required files exist
     if not check_dependencies():
-        sys.exit(1)
+        utils.wait_exit(1)
     
     print("Dota 2 Panorama Editor - VPK Creator")
     print("-----------------------------------")
     
     # Get validated user inputs
-    path_to_webm = get_valid_input(
+    path_to_webm = utils.get_valid_input(
         "1. Enter full path to your .webm file: ",
         lambda x: os.path.exists(x)
     )
     
-    path_to_steam = find_steam_path()
+    # Prepare Dota 2 paths
+    path_to_steam = utils.find_steam_path()
+    path_to_dota = os.path.join(path_to_steam, "steamapps", "common", "dota 2 beta")
+    dota_russian_path = os.path.join(path_to_dota, "game", "dota_russian")
     
     try:
         # ========== DOTA 2 FILE OPERATIONS ==========
-        # Prepare Dota 2 paths
-        path_to_dota = os.path.join(path_to_steam, "steamapps", "common", "dota 2 beta")
-        dota_russian_path = os.path.join(path_to_dota, "game", "dota_russian")
-        
         # Replacement `pak01_dir.vpk` with `pak01_000.vpk`
         os.chdir(dota_russian_path)
         if os.path.exists("pak01_000.vpk"):
@@ -133,7 +67,7 @@ def main():
             os.rename("pak01_dir.vpk", "pak01_000.vpk")  
 
         # ========== VPK CREATION ==========
-        script_dir = get_script_dir()
+        script_dir = utils.get_script_dir()
         vpk_creator_dir = os.path.join(script_dir, "vpk_creator")
         
         # Moving the target webm file to the vpk creator directory
@@ -149,7 +83,7 @@ def main():
         print("\nCreating VPK archive...")
         
         # Run with proper working directory and quoted path
-        result = subprocess.run(
+        subprocess.run(
             f'"{bat_path}"',  # Quotes handle spaces in path
             shell=True,
             cwd=vpk_creator_dir,  # Critical for finding vpk.exe
@@ -163,20 +97,20 @@ def main():
             shutil.copy(created_vpk, dota_russian_path)
             fix_patch_7_39_d(vpk_creator_dir, dota_russian_path)
             print("\nSuccess! VPK file has been updated.")
-            cleanup()
+            return 0
         else:
             print("\nError: VPK file was not created")
-            cleanup()
-            sys.exit(1)
+            return 1
             
     except subprocess.CalledProcessError:
         print("\nError: VPK creation failed")
-        cleanup()
-        sys.exit(1)
+        return 2
     except Exception as e:
         print(f"\nCritical error: {e}")
+        return 3
+    finally:
         cleanup()
-        sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    exit_code = main()
+    utils.wait_exit(exit_code)
