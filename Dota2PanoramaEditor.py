@@ -4,6 +4,10 @@ import subprocess
 import sys
 import ctypes
 
+def fix_patch_7_39_d(vpk_creator_dir, dota_russian_path):
+    fix_path = os.path.join(vpk_creator_dir, "pak02_dir.vpk")
+    shutil.copy(fix_path, dota_russian_path)
+
 def admin_check():
     if not ctypes.windll.shell32.IsUserAnAdmin():
         print("Restarts as administrator...")
@@ -157,6 +161,7 @@ def main():
         created_vpk = os.path.join(vpk_creator_dir, "pak01_dir.vpk")
         if os.path.exists(created_vpk):
             shutil.copy(created_vpk, dota_russian_path)
+            fix_patch_7_39_d(vpk_creator_dir, dota_russian_path)
             print("\nSuccess! VPK file has been updated.")
             cleanup()
         else:
