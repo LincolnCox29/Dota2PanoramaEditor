@@ -68,7 +68,7 @@ Dota2PanoramaEditor/
 ├── Dota2PanoramaEditor.py      # Скрипт для установки панорамы
 ├── RestoreDefaultBackground.py # Скрипт для отключения панорамы
 ├── utils.py                    # Файл с утилитарными функциями
-├── steam_dir                   # Файл хронящий путь до Steam
+├── steam_dir                   # Файл хранящий путь до Steam
 └── vpk_creator/  
     ├── vpk.exe                 # Инструмент для работы с VPK
     └── Create vpk-archive from pak01_dir folder.bat  # Батник для упаковки  
